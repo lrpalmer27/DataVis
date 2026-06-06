@@ -36,7 +36,7 @@ def aquireData(basesavepath, daterange, verbose=0):
     listdates=[str(daterange[0] + datetime.timedelta(days=x)) for x in range(days_between)]
     
     # list of binance filenames
-    basefilename = "https://data.binance.us/public_data/spot/daily/klines/BTCUSD/1d/BTCUSD-1d-"
+    basefilename = "https://data.binance.us/public_data/spot/daily/klines/BTCUSDT/1d/BTCUSDT-1d-"
     binancefilenames = [f"{basefilename}{x}.zip" for x in listdates]
 
     if verbose: 
@@ -109,7 +109,7 @@ def save2pickle(basesavepath, dataframe, verbose=0):
     # # # save pickle file
     start=df.iloc[0,df.columns.get_loc('open_time')].strftime('%Y-%m-%d')
     end=df.iloc[-1,df.columns.get_loc('close_time')].strftime('%Y-%m-%d')
-    df.to_pickle(f"{basesavepath}/BTCUSD_{start}_{end}.pkl")
+    df.to_pickle(f"{basesavepath}/BTCUSDT_{start}_{end}.pkl")
     
 
 if __name__ == "__main__": 
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     
     if performfcn == 'initialDataAq': 
         #update date range as desired
-        startdate = datetime.date(2021,12,12) #2019,9,17 is the first day of data in binance
+        startdate = datetime.date(2019,9,23) #2019-09-23 is the first day for btcusdt data in binance. // 2019,9,17 is the first day of data in binance for BTCUSD
         enddate = datetime.date(2026,6,5) #datetime.datetime.now().strftime('%Y-%m-%d')-1
         
         # download data
@@ -139,13 +139,13 @@ if __name__ == "__main__":
         newdata=postprocessing(basesavepath,verbose=verbose)
         
         #grab old data from picklefile
-        df=updatepickle(basesavepath,newdata=newdata,verbose=verbose)
+        # df=updatepickle(basesavepath,newdata=newdata,verbose=verbose)
         
-        save2pickle(basesavepath=basesavepath, dataframe=df,verbose=verbose)
+        save2pickle(basesavepath=basesavepath, dataframe=newdata,verbose=verbose)
     
     elif performfcn == 'updateData': 
         #daterange to update between
-        startdate = datetime.date(2025,2,20) #2019,9,17 is the first day of data in binance
+        startdate = datetime.date(2024,8,16) #2019,9,17 is the first day of data in binance
         enddate = datetime.date(2026,6,5) #datetime.datetime.now().strftime('%Y-%m-%d')-1
         
         # download data
@@ -158,8 +158,7 @@ if __name__ == "__main__":
         df=updatepickle(basesavepath,newdata=newdata,verbose=verbose)
         
         save2pickle(basesavepath=basesavepath, dataframe=df,verbose=verbose)
-        
-        None
+
         
         
     

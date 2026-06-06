@@ -11,6 +11,7 @@ df = pd.read_pickle(f"{rawdatafolder}/{datasource[0]}")
 
 print(df.head())
 print(df.tail())
+df = df.sort_values(by='open_time', ascending=True)
 # ----------- pre-processing -----------
 # make rolling calculations
 df['SMA']=df['volume'].rolling(window=30).mean()
