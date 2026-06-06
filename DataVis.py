@@ -4,25 +4,27 @@ import numpy as np
 import pandas as pd
 import os
 
-# import data
-df = pd.read_csv('../bitcoin_2021-05-31_2026-05-30.csv')
+# import data assuming only one pickle file in .rawdata
+rawdatafolder = './.rawdata'
+datasource= [f for f in os.listdir(rawdatafolder) if f.endswith(".pkl")]
+df = pd.read_pickle(f"{rawdatafolder}/{datasource[0]}")
 
 print(df.head())
 # ----------- pre-processing -----------
 # make rolling calculations
-df['SMA']=df['Volume'].rolling(window=30).mean()
-df['std'] = df['Volume'].rolling(window=60).std()
+df['SMA']=df['volume'].rolling(window=30).mean()
+df['std'] = df['volume'].rolling(window=60).std()
 df['neg3std'] = df['SMA']-3*df['std']
 df['pos3std'] = df['SMA']+3*df['std']
 
 # ----------- showing data -----------
 # add data
 fig, ax1 = plt.subplots(layout='constrained')
-open=df.plot(x='Start',y='Open',ax=ax1,label="Open Price [$USD]",color='green',legend=False)
+ax1.plot(df['open_time'],df['open'],label="Open Price [$USD]",color='green')
 ax3=ax2=ax1.twinx()
-vol=df.plot(x='Start',y='Volume',ax=ax2,label="Volume",color='tan',legend=False)
-sma = df.plot(x='Start',y='SMA',ax=ax2,label="Vol SMA 30d",color='blue',legend=False)
-fill = ax2.fill_between(x=df['Start'],y1=df['neg3std'],y2=df['pos3std'],alpha=0.1, label="3*std (60day) offset from vol SMA")
+ax2.plot(df['open_time'],df['volume'],label="Volume",color='tan')
+ax2.plot(df['open_time'],df['SMA'],label="Vol SMA 30d",color='blue')
+ax2.fill_between(x=df['open_time'],y1=df['neg3std'],y2=df['pos3std'],alpha=0.1, label="3*std (60day) offset from vol SMA")
 
 #make legend, labels, show plots
 h1, l1 = ax1.get_legend_handles_labels()
@@ -33,4 +35,4 @@ ax1.set_xlabel("Dates")
 ax1.set_ylabel("Price [$USD]")
 ax1.tick_params('x', labelrotation=45)
 mplcursors.cursor(hover=False)
-plt.show()
+plt.show(block=True)

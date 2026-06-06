@@ -3,12 +3,18 @@ import datetime
 import wget 
 import zipfile
 import pandas as pd
-from datetime import datetime, timezone
+import datetime
+# from datetime import datetime, timezone, date
 
 """
 The purpose of this file is to retrieve data from binance programmatically, save it to a location, and post process it, given a date range.
 Browser compatible data exploration:
     https://www.binance.us/finder?dpath=public_data%2Fspot%2Fdaily%2Fklines%2FBTCUSD%2F1d
+
+How to use this?
+    1. Run aquireData to pull data from web
+    2. Run postprocessing to convert csv files to pkl file
+    3. Run ------ to add newest data to pkl file (feature coming soon!)
     
 """
 def aquireData(basesavepath, daterange, verbose=0):
@@ -61,20 +67,24 @@ def postprocessing(basesavepath, verbose=0):
         daterange(start,end) - both bounds inclusive
         verbose - false by default.
     """
+    # Combine all csv files into one dataframe
     listcsvfiles = [f"{basesavepath}/csvfiles/{n}" for n in os.listdir(f"{basesavepath}/csvfiles")]
-    
     df = pd.concat((pd.read_csv(f) for f in listcsvfiles), ignore_index=True)
     
-   
-    start=datetime.fromtimestamp(df.iloc[0,df.columns.get_loc('open_time')]/1000,tz=timezone.utc).strftime('%Y-%m-%d')
-    end=datetime.fromtimestamp(df.iloc[-1,df.columns.get_loc('close_time')]/1000,tz=timezone.utc).strftime('%Y-%m-%d')
+    # # convert time columns to datetime obj
+    df['open_time'] = pd.to_datetime(df['open_time'], unit='ms')
+    df['close_time'] = pd.to_datetime(df['close_time'], unit='ms')
+    df['volume'] = df['volume']*1e+9
     
+    # # # save pickle file
+    start=df.iloc[0,df.columns.get_loc('open_time')].strftime('%Y-%m-%d')
+    end=df.iloc[-1,df.columns.get_loc('close_time')].strftime('%Y-%m-%d')
     df.to_pickle(f"{basesavepath}/BTCUSD_{start}_{end}.pkl")
     
     if verbose: 
         print(listcsvfiles) #check that csv file names are generated correctly.
         print(df.head(5)) #check df data
-        print('Open date: ', start, "close date: ", end) #checking start and end date of data
+        # print('Open date: ', start, "close date: ", end) #checking start and end date of data
         
     # delete csv folder content for storage saving
     [os.remove(n) for n in listcsvfiles]
@@ -83,17 +93,25 @@ def postprocessing(basesavepath, verbose=0):
 if __name__ == "__main__": 
     verbose = 1 
     basesavepath = './.rawdata'
+
+    performfcn = 'initialDataAq' #initialDataAq, or updateData
     
-    # performfcn = 'aquiredata' #aquiredata, or postprocess
-    performfcn = 'postprocess' #aquiredata, or postprocess
-    
-    if performfcn == 'aquiredata': 
+    if performfcn == 'initialDataAq': 
         #update date range as desired
-        startdate = datetime.date(2026,6,1) #2026,9,17 is the first day of data in binance
+        startdate = datetime.date(2026,1,5) #2026,9,17 is the first day of data in binance
         enddate = datetime.date(2026,6,5) #datetime.datetime.now().strftime('%Y-%m-%d')-1
         
-        aquireData(basesavepath,daterange=(startdate, enddate),verbose=verbose)
-    
-    elif performfcn == 'postprocess': 
+        # download and unzip data
+        aquireData(basesavepath,daterange=(startdate, enddate),verbose=verbose) 
+        
+        #extract data, post-process and save to pickle file.
         postprocessing(basesavepath,verbose=verbose)
+    
+    
+    elif performfcn == 'updateData': 
+        #TODO: add this function.
+        
+        None
+        
+        
     
