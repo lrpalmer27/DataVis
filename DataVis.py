@@ -21,8 +21,8 @@ fig, ax1 = plt.subplots(layout='constrained')
 open=df.plot(x='Start',y='Open',ax=ax1,label="Open Price [$USD]",color='green',legend=False)
 ax3=ax2=ax1.twinx()
 vol=df.plot(x='Start',y='Volume',ax=ax2,label="Volume",color='tan',legend=False)
-sma = df.plot(x='Start',y='SMA',ax=ax2,label="SMA 30d",color='blue',legend=False)
-fill = ax2.fill_between(x=df['Start'],y1=df['neg3std'],y2=df['pos3std'],alpha=0.1, label="3*std (60day) offset from SMA")
+sma = df.plot(x='Start',y='SMA',ax=ax2,label="Vol SMA 30d",color='blue',legend=False)
+fill = ax2.fill_between(x=df['Start'],y1=df['neg3std'],y2=df['pos3std'],alpha=0.1, label="3*std (60day) offset from vol SMA")
 
 #make legend, labels, show plots
 h1, l1 = ax1.get_legend_handles_labels()

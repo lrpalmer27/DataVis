@@ -218,3 +218,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ignore raw data. get-data.py can be used to re-generate the data as needed.
+.rawdata/
