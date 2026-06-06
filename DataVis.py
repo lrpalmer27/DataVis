@@ -10,6 +10,7 @@ datasource= [f for f in os.listdir(rawdatafolder) if f.endswith(".pkl")]
 df = pd.read_pickle(f"{rawdatafolder}/{datasource[0]}")
 
 print(df.head())
+print(df.tail())
 # ----------- pre-processing -----------
 # make rolling calculations
 df['SMA']=df['volume'].rolling(window=30).mean()
@@ -33,6 +34,7 @@ ax1.legend(h1+h2,l1+l2)
 ax1.set_title("Visualizing BTC/USD Data")
 ax1.set_xlabel("Dates")
 ax1.set_ylabel("Price [$USD]")
+ax2.set_ylabel("Volume")
 ax1.tick_params('x', labelrotation=45)
 mplcursors.cursor(hover=False)
 plt.show(block=True)

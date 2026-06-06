@@ -19,7 +19,7 @@ How to use this?
 """
 def aquireData(basesavepath, daterange, verbose=0):
     """
-    The objective of this function is to download all the data within the given daterange and unpack the zip files. 
+    The objective of this function is to download all the data within the given daterange. 
     Parameters are:
         basesave path (str) - folder location, does not have to exist
         daterange(start,end) - both bounds inclusive
@@ -48,16 +48,7 @@ def aquireData(basesavepath, daterange, verbose=0):
 
     # do the downloading here:
     [wget.download(url=binancefilenames[n],out=f"{basesavepath}/zipfiles/{listdates[n]}.zip") for n in list(range(0,days_between))]
-    
-    #unpack zip files here:
-    zippedfiles = os.listdir(f"{basesavepath}/zipfiles") #grabbing all files in this folder, incase error is encountered above with preferred list
-    for path in zippedfiles:
-        with zipfile.ZipFile(f"{basesavepath}/zipfiles/{path}",'r') as objct:
-            objct.extractall(f"{basesavepath}/csvfiles")
 
-    # delete zipfiles folder content for storage saving
-    fullstring=[f"{basesavepath}/zipfiles/{n}" for n in zippedfiles]
-    [os.remove(n) for n in fullstring]
 
 def postprocessing(basesavepath, verbose=0):
     """
@@ -67,6 +58,16 @@ def postprocessing(basesavepath, verbose=0):
         daterange(start,end) - both bounds inclusive
         verbose - false by default.
     """
+    #unpack zip files here:
+    zippedfiles = os.listdir(f"{basesavepath}/zipfiles") #grabbing all files in this folder, incase error is encountered above with preferred list
+    for path in zippedfiles:
+        with zipfile.ZipFile(f"{basesavepath}/zipfiles/{path}",'r') as objct:
+            objct.extractall(f"{basesavepath}/csvfiles")
+
+    # delete zipfiles folder content for storage saving
+    fullstring=[f"{basesavepath}/zipfiles/{n}" for n in zippedfiles]
+    [os.remove(n) for n in fullstring]
+    
     # Combine all csv files into one dataframe
     listcsvfiles = [f"{basesavepath}/csvfiles/{n}" for n in os.listdir(f"{basesavepath}/csvfiles")]
     df = pd.concat((pd.read_csv(f) for f in listcsvfiles), ignore_index=True)
@@ -75,41 +76,88 @@ def postprocessing(basesavepath, verbose=0):
     df['open_time'] = pd.to_datetime(df['open_time'], unit='ms')
     df['close_time'] = pd.to_datetime(df['close_time'], unit='ms')
     df['volume'] = df['volume']*1e+9
+
+    if verbose: 
+        print(listcsvfiles) #check that csv file names are generated correctly.
+        print(df.head(5)) #check df data
+        # print('Open date: ', start, "close date: ", end) #checking start and end date of data
     
+    # delete csv folder content for storage saving
+    [os.remove(n) for n in listcsvfiles]
+    
+    return df
+
+def updatepickle(basesavepath,newdata,verbose=0):
+    """
+    This function grabs the old pickle file, together with the new post processed data, combines them, saves, and deletes the old.
+    """
+    opfn = [f for f in os.listdir(basesavepath) if f.endswith(".pkl")][0]
+    oldpicklefilepath=f"{basesavepath}/{opfn}"
+    
+    olddf = pd.read_pickle(oldpicklefilepath)
+    
+    combineddf=pd.concat((olddf,newdata),ignore_index=True)
+    
+    return combineddf
+
+
+def save2pickle(basesavepath, dataframe, verbose=0):
+    """
+    All this function does is intake a dataframe, grab the first and last date, and save the file.
+    """
+    df=dataframe
     # # # save pickle file
     start=df.iloc[0,df.columns.get_loc('open_time')].strftime('%Y-%m-%d')
     end=df.iloc[-1,df.columns.get_loc('close_time')].strftime('%Y-%m-%d')
     df.to_pickle(f"{basesavepath}/BTCUSD_{start}_{end}.pkl")
     
-    if verbose: 
-        print(listcsvfiles) #check that csv file names are generated correctly.
-        print(df.head(5)) #check df data
-        # print('Open date: ', start, "close date: ", end) #checking start and end date of data
-        
-    # delete csv folder content for storage saving
-    [os.remove(n) for n in listcsvfiles]
-    
 
 if __name__ == "__main__": 
-    verbose = 1 
+    verbose = 0 
     basesavepath = './.rawdata'
 
-    performfcn = 'initialDataAq' #initialDataAq, or updateData
+    performfcn = 'updateData' #initialDataAq, cleanup, or updateData
     
     if performfcn == 'initialDataAq': 
         #update date range as desired
-        startdate = datetime.date(2026,1,5) #2026,9,17 is the first day of data in binance
+        startdate = datetime.date(2021,12,12) #2019,9,17 is the first day of data in binance
         enddate = datetime.date(2026,6,5) #datetime.datetime.now().strftime('%Y-%m-%d')-1
         
-        # download and unzip data
+        # download data
         aquireData(basesavepath,daterange=(startdate, enddate),verbose=verbose) 
         
-        #extract data, post-process and save to pickle file.
-        postprocessing(basesavepath,verbose=verbose)
+        #extract data, post-process and save to pickle file. This outputs the complete df
+        df=postprocessing(basesavepath,verbose=verbose)
+        
+        # save pickle file
+        save2pickle(basesavepath=basesavepath, dataframe=df,verbose=verbose)
     
+    elif performfcn == 'cleanup':
+        #this function is used when there is some kind of http timeout. 
+        
+        #postprocess new data
+        newdata=postprocessing(basesavepath,verbose=verbose)
+        
+        #grab old data from picklefile
+        df=updatepickle(basesavepath,newdata=newdata,verbose=verbose)
+        
+        save2pickle(basesavepath=basesavepath, dataframe=df,verbose=verbose)
     
     elif performfcn == 'updateData': 
-        #TODO: add this function.
+        #daterange to update between
+        startdate = datetime.date(2025,2,20) #2019,9,17 is the first day of data in binance
+        enddate = datetime.date(2026,6,5) #datetime.datetime.now().strftime('%Y-%m-%d')-1
+        
+        # download data
+        aquireData(basesavepath,daterange=(startdate, enddate),verbose=verbose) 
+        
+        #postprocess new data
+        newdata=postprocessing(basesavepath,verbose=verbose)
+        
+        #grab old data from picklefile
+        df=updatepickle(basesavepath,newdata=newdata,verbose=verbose)
+        
+        save2pickle(basesavepath=basesavepath, dataframe=df,verbose=verbose)
         
         None
         
