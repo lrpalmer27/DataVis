@@ -12,9 +12,10 @@ This project is built to be a playground exploring different matplotlib features
 2. DataVis.py: this file plots some basic items over the range of data available.
 
 # Known data problems
-get-data.py errors out at 2023-07-14 through 2025-02-20 due to missing data from Binance on the 1d timescale.
+BTC/USD - Binance has missing data between 2023-07-14 through 2025-02-20
+Charts use BTC/USDT moving fwd.
 
 ## Current Progress as of 06/01/2026:
 Basic plots generated from DataVis.py
 
-![](./assets/Figure_2.png)
+![](./assets/Figure_3.png)
