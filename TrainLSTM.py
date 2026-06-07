@@ -77,12 +77,34 @@ def train(X_train, Y_train, X_val, Y_val, X_test, Y_test,verbose=0):
     model1.summary()
     
     cp = ModelCheckpoint(filepath='.data/LSTM-model1.keras', save_best_only=True)
-    model1.compile(loss=MeanSquaredError(), optimizer=Adam(learning_rate=0.0011), metrics=[RootMeanSquaredError()])
+    model1.compile(loss=MeanSquaredError(), optimizer=Adam(), metrics=[RootMeanSquaredError()])
     
     if verbose:
         print(tf.config.list_physical_devices())    
         
-    model1.fit(X_train,Y_train,validation_data=(X_val,Y_val), epochs=200, callbacks=[cp])     
+    model1.fit(X_train,Y_train,validation_data=(X_val,Y_val), epochs=5, callbacks=[cp], verbose=verbose)     
+
+def zscoreNorm_manual(inp,mean,std):
+    return (inp-mean)/std
+
+def normalizedata(X_train, Y_train, X_val, Y_val, X_test, Y_test,verbose=0): 
+    
+    x_train_1=zscoreNorm_manual(X_train,unNormData["xtrain"][0],unNormData["xtrain"][1])
+    y_train_1=zscoreNorm_manual(Y_train,unNormData["ytrain"][0],unNormData["ytrain"][1])
+    
+    x_val_1=zscoreNorm_manual(X_val,unNormData["xval"][0],unNormData["xval"][1])
+    y_val_1=zscoreNorm_manual(Y_val,unNormData["yval"][0],unNormData["yval"][1])
+    
+    x_test_1=zscoreNorm_manual(X_test,unNormData["xtest"][0],unNormData["xtest"][1])
+    y_test_1=zscoreNorm_manual(Y_test,unNormData["ytest"][0],unNormData["ytest"][1])
+
+    return x_train_1, y_train_1, x_val_1, y_val_1, x_test_1, y_test_1
+
+def unNormalize(normddata,meann,stddev):
+    # print(meann,stddev)
+    orig=normddata*stddev + meann
+    return orig
+
 
 if __name__ == "__main__": 
     verbose = 1
@@ -93,20 +115,43 @@ if __name__ == "__main__":
     X_train, Y_train, X_val, Y_val, X_test, Y_test = splitsy(X,Y)
     
     #training call
-    training = True
-    if training: 
-        train(X_train, Y_train, X_val, Y_val, X_test, Y_test,verbose=verbose)
+    training = False
+    x_train_1, y_train_1, x_val_1, y_val_1, x_test_1, y_test_1 = normalizedata(X_train, Y_train, X_val, Y_val, X_test, Y_test)
+    if training:
+        train(x_train_1, y_train_1, x_val_1, y_val_1, x_test_1, y_test_1,verbose=verbose)
     
-    #reload good model
+    #reload good model  
     results=True
     if results: 
+        normed_ytrain=unNormalize(x_train_1,unNormData['ytrain'][0],unNormData['ytrain'][1])
+        normed_yval=unNormalize(y_val,unNormData['yval'][0],unNormData['yval'][1])
+        normed_ytest=unNormalize(y_test,unNormData['ytest'][0],unNormData['ytest'][1])
+
+        normValPreedict=unNormalize(val_predictions,unNormData['yval'][0],unNormData['yval'][1])
+        normTestPredictions=unNormalize(test_predictions,unNormData['ytest'][0],unNormData['ytest'][1])
+        normed_futurePrediction=unNormalize(future_predict,unNormData['ytest'][0],unNormData['ytest'][1])
+        
+        
+        
         model1 = load_model('.data/LSTM-model1.keras')    
-        train_predictions = model1.predict(X_train).flatten()
-        train_results = pd.DataFrame(data={'Predicted Open':train_predictions,'Actual Open': Y_train})
-        print(train_results)
+        train_predictions = model1.predict(x_train_1).flatten()
+        if verbose: 
+            print(train_predictions.shape)
+            print(y_train_1.shape)
+        train_results = pd.DataFrame(data={'Predicted Open':train_predictions,'Actual Open': y_train_1})
+        
+        if verbose: 
+            print(train_results)
     
         plt.plot(train_results['Predicted Open'], label='Predicted')
         plt.plot(train_results['Actual Open'], label='Actual')
+        plt.show()
+        
+        val_predictions = model1.predict(x_val_1).flatten()
+        val_results = pd.DataFrame(data={'Predicted Open':val_predictions,'Actual Open': y_val_1})
+        
+        plt.plot(val_results['Predicted Open'], label='Predicted')
+        plt.plot(val_results['Actual Open'], label='Actual')
         plt.show()
 
     
