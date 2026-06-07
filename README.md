@@ -13,8 +13,8 @@ This file pulls data from Binance and pre-processes it into a pickle file to be 
 ### DataVis.py
 This file plots some basic items over the range of data available.
 
-### TrainLSTM.py
-Training for an LSTM model.
+### LSTM.ipynb
+LSTM playground.
 
 # Known data problems
 BTC/USD - Binance has missing data between 2023-07-14 through 2025-02-20
@@ -24,3 +24,7 @@ Charts use BTC/USDT moving fwd.
 Basic plots generated from DataVis.py
 
 ![](./assets/Figure_4.png)
+
+No clue why this behaviour is happening.
+
+![](./assets/LSTM-price-vol-trained.png)
