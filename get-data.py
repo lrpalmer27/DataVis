@@ -36,7 +36,7 @@ def aquireData(basesavepath, daterange, verbose=0):
     listdates=[str(daterange[0] + datetime.timedelta(days=x)) for x in range(days_between)]
     
     # list of binance filenames
-    basefilename = "https://data.binance.us/public_data/spot/daily/klines/BTCUSDT/1d/BTCUSDT-1d-"
+    basefilename = "https://data.binance.us/public_data/spot/daily/klines/BTCUSDT/1h/BTCUSDT-1h-"
     binancefilenames = [f"{basefilename}{x}.zip" for x in listdates]
 
     if verbose: 
@@ -138,10 +138,10 @@ if __name__ == "__main__":
         #postprocess new data
         newdata=postprocessing(basesavepath,verbose=verbose)
         
-        #grab old data from picklefile
-        # df=updatepickle(basesavepath,newdata=newdata,verbose=verbose)
+        #combine new data with old pickle data!
+        df=updatepickle(basesavepath,newdata=newdata,verbose=verbose)
         
-        save2pickle(basesavepath=basesavepath, dataframe=newdata,verbose=verbose)
+        save2pickle(basesavepath=basesavepath, dataframe=df,verbose=verbose)
     
     elif performfcn == 'updateData': 
         #daterange to update between
