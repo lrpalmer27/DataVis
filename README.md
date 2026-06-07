@@ -23,4 +23,4 @@ Charts use BTC/USDT moving fwd.
 # Current Progress as of 06/01/2026:
 Basic plots generated from DataVis.py
 
-![](./assets/Figure_3.png)
+![](./assets/Figure_4.png)
