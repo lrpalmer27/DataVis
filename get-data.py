@@ -59,17 +59,18 @@ def postprocessing(basesavepath, verbose=0):
         verbose - false by default.
     """
     #unpack zip files here:
-    zippedfiles = os.listdir(f"{basesavepath}/zipfiles") #grabbing all files in this folder, incase error is encountered above with preferred list
+    
+    zippedfiles = os.listdir(os.path.join(basesavepath,'zipfiles')) #grabbing all files in this folder, incase error is encountered above with preferred list
     for path in zippedfiles:
-        with zipfile.ZipFile(f"{basesavepath}/zipfiles/{path}",'r') as objct:
-            objct.extractall(f"{basesavepath}/csvfiles")
+        with zipfile.ZipFile(os.path.join(basesavepath,'zipfiles',path),'r') as objct:
+            objct.extractall(os.path.join(basesavepath,'csvfiles'))
 
     # delete zipfiles folder content for storage saving
-    fullstring=[f"{basesavepath}/zipfiles/{n}" for n in zippedfiles]
+    fullstring=[os.path.join(basesavepath,'zipfiles',n) for n in zippedfiles]
     [os.remove(n) for n in fullstring]
     
     # Combine all csv files into one dataframe
-    listcsvfiles = [f"{basesavepath}/csvfiles/{n}" for n in os.listdir(f"{basesavepath}/csvfiles")]
+    listcsvfiles = [os.path.join(basesavepath,'csvfiles',n)  for n in os.listdir(os.path.join(basesavepath,'csvfiles'))]
     df = pd.concat((pd.read_csv(f) for f in listcsvfiles), ignore_index=True)
     
     # # convert time columns to datetime obj
@@ -121,7 +122,7 @@ if __name__ == "__main__":
     if performfcn == 'initialDataAq': 
         #update date range as desired
         startdate = datetime.date(2019,9,23) #2019-09-23 is the first day for btcusdt data in binance. // 2019,9,17 is the first day of data in binance for BTCUSD
-        enddate = datetime.date(2026,6,5) #datetime.datetime.now().strftime('%Y-%m-%d')-1
+        enddate = datetime.date(2020,6,20) #datetime.datetime.now().strftime('%Y-%m-%d')-1
         
         # download data
         aquireData(basesavepath,daterange=(startdate, enddate),verbose=verbose) 
@@ -145,8 +146,8 @@ if __name__ == "__main__":
     
     elif performfcn == 'updateData': 
         #daterange to update between
-        startdate = datetime.date(2024,8,16) #2019,9,17 is the first day of data in binance
-        enddate = datetime.date(2026,6,5) #datetime.datetime.now().strftime('%Y-%m-%d')-1
+        startdate = datetime.date(2021,5,26) #2019,9,17 is the first day of data in binance
+        enddate = datetime.date(2026,6,20) #datetime.datetime.now().strftime('%Y-%m-%d')-1
         
         # download data
         aquireData(basesavepath,daterange=(startdate, enddate),verbose=verbose) 
